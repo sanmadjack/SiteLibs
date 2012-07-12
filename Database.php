@@ -131,22 +131,22 @@ class Database {
         
     }
     public function Update($db,$criteria,$values,$message = null) {
-        self::Update($db,$criteria,$values,$this->link,$message);
+        self::UpdateTo($db,$criteria,$values,$this->link,$message);
 
     }
-    public static function UpdateTo($db,$criteria,$values,$con,$message = null) {
+    public static function UpdateTo($db,$criteria,$values,$link,$message = null) {
             $sql = "UPDATE ".$db;
             if($values!=null) {
                 $sql .= " SET";
                 foreach ($values as $key => $value) {
-                    $sql .= " `".$key."` = '".mysql_real_escape_string($value)."',";
+                    $sql .= " `".$key."` = '".$link->real_escape_string($value)."',";
                 }
                 $sql = trim($sql,', ');            
             } else {
                 throw new Exception("NEED VALUES");
             }
             
-            $sql .= self::buildCriteriaString($criteria);
+            $sql .= self::buildCriteriaString($criteria,$link);
             
             if($message!=null) {
                 echo "<details><summary>".$message."</summary><pre>";
@@ -155,7 +155,7 @@ class Database {
                 echo $sql;
                 echo "</pre></details>";
             }
-            self::RunStatement($sql,$con);
+            self::RunStatementOn($sql,$link);
     }
     public function Delete($db,$criteria,$message = null) {
         self::DeleteFrom($db,$criteria,$this->link,$message);
@@ -226,7 +226,7 @@ class Database {
         } else {
             echo $sql."<br /><br />";
             echo $link->error;
-    	    throw new Exception("MYSQL ERROR");
+            throw new Exception("MYSQL ERROR");
         }
     }
 
