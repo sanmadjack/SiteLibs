@@ -1,0 +1,20 @@
+.has_tooltip {
+    position:relative;
+	display:inline;
+}
+.has_tooltip .tooltip {
+    border-radius: 5px;
+    white-space:nowrap;
+    padding:5px;
+    vertical-align:middle;
+    text-align:left;
+    position:absolute;
+    top:25px;
+    left:35px;
+    display:none;
+    background-color:rgba(0,0,0,0.8);
+    border:solid 2px rgba(0,0,0,0.5);
+    font-size:12px;
+    color:#eeeeec;
+	z-index:9999999999;
+}
