@@ -27,21 +27,63 @@ class Database {
             $this->link = $link;
             return $link;
     }
+    
     public function close() {
         $this->link->close();   
     }
-    private static function buildCriteriaString($criteria,$link) {
+    public function buildCriteriaString($criteria) {
+        return self::buildCriteriaStringFor($criteria,$this->link);
+    }
+    private static function buildCriteriaStringFor($criteria,$link) {
         if(!is_object($link))
             throw new Exception("NOT OBJECT".var_dump($link));
-            
         if($criteria!=null) {
             $sql = ' WHERE';
+            
             if(is_array($criteria)) {
                 foreach ($criteria as $key => $value) {
+                    $not = false;
+                    if(substr($key,0,1)=="!") {
+                        $key = substr($key,1);
+                        $not = true;
+                    }
+
                     if(is_null($value)) {
-                        $sql .= ' `'.$key."` IS NULL AND ";                        
+                        $sql .= ' `'.$key."`";
+                        if($not)
+                            $sql .= " IS NOT NULL AND ";      
+                        else                            
+                            $sql .= " IS NULL AND ";      
+                    } else if (is_array($value)) {
+                        if(sizeof($value)==0) {
+                            continue;
+                        }
+                        if($not)
+                            $sql .= ' (';
+                        
+                        $sql .= ' `'.$key."`";
+                        
+                        if($not)
+                            $sql .= ' NOT';
+                            
+                        $sql .= ' IN (';
+                        foreach($value as $v) {
+                            $sql .= "'".$link->real_escape_string($v)."',";
+                        }
+                        $sql = substr($sql,0,strlen($sql)-1);
+                        $sql .= ')';
+                        
+                        if($not)
+                            $sql .= ' OR `'.$key."` IS NULL )";
+                        
+                        $sql .= ' AND ';
                     } else {
-                        $sql .= ' `'.$key."` = '".$link->real_escape_string($value)."' AND ";
+                        $sql .= ' `'.$key."`";
+                        if($not)
+                            $sql .= " !=";
+                        else
+                            $sql .= " =";
+                        $sql .= " '".$link->real_escape_string($value)."' AND ";
                     }
                 }
                 $sql = substr($sql,0,strlen($sql)-5);
@@ -113,7 +155,7 @@ class Database {
         }
         $sql .= self::buildTableString($db);
         
-        $sql .= self::buildCriteriaString($criteria,$link);
+        $sql .= self::buildCriteriaStringFor($criteria,$link);
         
         $sql .= self::buildOrderString($order);
         
@@ -146,7 +188,7 @@ class Database {
                 throw new Exception("NEED VALUES");
             }
             
-            $sql .= self::buildCriteriaString($criteria,$link);
+            $sql .= self::buildCriteriaStringFor($criteria,$link);
             
             if($message!=null) {
                 echo "<details><summary>".$message."</summary><pre>";
@@ -165,7 +207,7 @@ class Database {
     public static function DeleteFrom($db,$criteria,$con,$message = null) {
             $sql = "DELETE FROM ".$db." ";
             
-            $sql .= self::buildCriteriaString($criteria,$con);
+            $sql .= self::buildCriteriaStringFor($criteria,$con);
             
             if($message!=null) {
                 echo "<details><summary>".$message."</summary><pre>";
