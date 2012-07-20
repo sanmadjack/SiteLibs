@@ -41,11 +41,19 @@ class Database {
             $sql = ' WHERE';
             
             if(is_array($criteria)) {
+                $first = true;
                 foreach ($criteria as $key => $value) {
                     $not = false;
-                    if(substr($key,0,1)=="!") {
-                        $key = substr($key,1);
-                        $not = true;
+                    $or = false;
+                    switch(substr($key,0,1)) {
+                        case "!":
+                            $key = substr($key,1);
+                            $not = true;
+                            break;
+                        case "|":
+                            $key = substr($key,1);
+                            $sql = substr($sql,0,strlen($sql)-5).' OR';
+                            break;                        
                     }
 
                     if(is_null($value)) {
@@ -54,36 +62,68 @@ class Database {
                             $sql .= " IS NOT NULL AND ";      
                         else                            
                             $sql .= " IS NULL AND ";      
-                    } else if (is_array($value)) {
-                        if(sizeof($value)==0) {
-                            continue;
-                        }
-                        if($not)
-                            $sql .= ' (';
-                        
-                        $sql .= ' `'.$key."`";
-                        
-                        if($not)
-                            $sql .= ' NOT';
-                            
-                        $sql .= ' IN (';
-                        foreach($value as $v) {
-                            $sql .= "'".$link->real_escape_string($v)."',";
-                        }
-                        $sql = substr($sql,0,strlen($sql)-1);
-                        $sql .= ')';
-                        
-                        if($not)
-                            $sql .= ' OR `'.$key."` IS NULL )";
-                        
-                        $sql .= ' AND ';
                     } else {
-                        $sql .= ' `'.$key."`";
-                        if($not)
-                            $sql .= " !=";
-                        else
-                            $sql .= " =";
-                        $sql .= " '".$link->real_escape_string($value)."' AND ";
+                        if(is_array($value)&&sizeof($value)==1)
+                            $value = $value[0];
+                        
+                        if(is_array($value)) {
+                            if(sizeof($value)==0) {
+                                continue;
+                            }
+                            $sql .= ' (';
+                            
+                            
+                            $need_key = true;
+                            foreach($value as $v) {
+                                if(strstr($v,"%")) {
+                                    if(!$need_key) {
+                                        $sql .= ') OR';
+                                    }
+                                    $need_key = false;
+                                    $sql .= ' `'.$key."`";                            
+                                    if($not)
+                                        $sql .= " NOT";
+                                    $sql .= " LIKE";
+                                }
+                                if($need_key) {
+                                    $sql .= ' `'.$key."`";                            
+                                    if($not)
+                                        $sql .= ' NOT';
+                                    $sql .= ' IN (';                                    
+                                    $need_key = false;
+                                }
+                                $sql .= " '".$link->real_escape_string($v)."',";
+                                if(strstr($v,"%")) {
+                                    $sql = substr($sql,0,strlen($sql)-1);
+                                    $sql .= ' OR';
+                                    $need_key = true;
+                                }
+                            }
+                            if($need_key)
+                                $sql = substr($sql,0,strlen($sql)-2);
+                            else {
+                                $sql = substr($sql,0,strlen($sql)-1);
+                                $sql .= ')';
+                            }
+                            
+                            if($not)
+                                $sql .= ' OR `'.$key."` IS NULL";
+                            
+                            $sql .= ') AND ';
+                        } else {
+                            $sql .= ' `'.$key."`";
+                            if(strstr($value,"%")) {
+                                if($not)
+                                    $sql .= " NOT";
+                                $sql .= " LIKE";                            
+                            } else {
+                                if($not)
+                                    $sql .= " !=";
+                                else
+                                    $sql .= " =";
+                            }
+                            $sql .= " '".$link->real_escape_string($value)."' AND ";
+                        }
                     }
                 }
                 $sql = substr($sql,0,strlen($sql)-5);
