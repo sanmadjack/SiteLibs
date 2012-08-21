@@ -14,7 +14,10 @@ class Database {
             $this->password = $password;
             $this->db = $db;
     }
-        
+     
+     
+
+     
     public function connect() {
             $link = new mysqli($this->server,$this->user,$this->password);
             /* check connection */
@@ -43,6 +46,12 @@ class Database {
             if(is_array($criteria)) {
                 $first = true;
                 foreach ($criteria as $key => $value) {
+                    if(is_numeric($key)) {
+                        $sql .= $value." AND ";
+                        
+                        continue;
+                    }
+                    
                     $not = false;
                     $or = false;
                     switch(substr($key,0,1)) {
@@ -134,6 +143,10 @@ class Database {
         }
         return "";
         
+    }
+
+    public function escapeString($value) {
+        return $this->link->real_escape_string($value);
     }
 
     private static function buildTableString($tables) {
