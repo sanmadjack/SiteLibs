@@ -13,6 +13,8 @@
     color:#eeeeec;
     display:none;
     z-index:9999999999;
+    overflow-y:auto;
+    overflow-x:auto;
 }
 .popup a {
     color:#eeeeec;    
