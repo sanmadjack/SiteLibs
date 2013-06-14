@@ -11,7 +11,10 @@ function setUpPopUps() {
         var div = $(this).attr('href');
         $("#" + div).stop(true, true).fadeIn();
     });
-    $('div.popup').append('<a class="popup_close">Close</a>');
+    $('div.popup').html(function(index, oldhtml) {
+        return '<a class="popup_close">Close</a><div class="popup_content">' + oldhtml + '</div>';
+    });
+        
     $('a.popup_close').mousedown(function(e) {
         $(this).parent().stop(true, true).fadeOut();
     });
