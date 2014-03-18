@@ -321,7 +321,7 @@ class Database {
         } else {
             echo $sql."<br /><br />";
             echo $link->error;
-            throw new Exception("MYSQL ERROR");
+            throw new Exception($link->error);
         }
     }
 
