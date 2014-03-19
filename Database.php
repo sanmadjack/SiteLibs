@@ -22,7 +22,7 @@ class Database {
             $link = new mysqli($this->server,$this->user,$this->password);
             /* check connection */
             if (mysqli_connect_errno()) {
-                    throw new Exception("Connect failed: %s\n", mysqli_connect_error());
+                    throw new Exception("Connect failed: ".mysqli_connect_error());
             }
             if($this->db!=null)
                     $link->select_db($this->db);
